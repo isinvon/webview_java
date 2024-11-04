@@ -39,8 +39,7 @@ public class FxExample extends Application {
     private void initWv() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         Scene s = stage.getScene();
 
-        wv = new Webview(true, new PointerByReference(FXStageDetect.getWindowPointer(stage)),
-                (int)s.getWidth(), (int)s.getHeight());
+        wv = new Webview(true, new PointerByReference(FXStageDetect.getWindowPointer(stage)));
         wv.setTitle("TestWindow");
         // note: not allow to resize
         wv.setFixedSize((int)s.getWidth(), (int)s.getHeight());

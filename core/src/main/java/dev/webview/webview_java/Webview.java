@@ -2,7 +2,7 @@
  * MIT LICENSE
  *
  * Copyright (c) 2024 Alex Bowles @ Casterlabs
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -42,16 +42,14 @@ import dev.webview.webview_java.WebviewNative.BindCallback;
 import lombok.NonNull;
 
 public class Webview implements Closeable, Runnable {
-
-    @Deprecated
-    public long $pointer;
+    private final long $pointer;
 
     /**
      * Creates a new Webview. <br/>
      * The default size will be set, and if the size is set again before loading the
      * URL, a splash will appear.<br/>
      * eg:
-     * 
+     *
      * <pre>
      * <code>
      *   WebView wv = new WebView(true);
@@ -59,22 +57,21 @@ public class Webview implements Closeable, Runnable {
      *   wv.loadURL("...")
      * </code>
      * </pre>
-     * 
+     * <p>
      * It's recommended that setting size together:
-     * 
+     *
      * <pre>
      * <code>
      *   WebView wv = new WebView(true, 1280, 720);
      *   wv.loadURL("...")
      * </code>
      * </pre>
-     * 
+     *
      * @param debug Enables devtools/inspect element if true.
-     * 
-     * @see         #Webview(boolean, int, int)
+     * @see #Webview(boolean, int, int)
      */
     public Webview(boolean debug) {
-        this(debug, (PointerByReference) null);
+        this(debug, 800, 600);
     }
 
     /**
@@ -85,7 +82,7 @@ public class Webview implements Closeable, Runnable {
      * @param height preset - height
      */
     public Webview(boolean debug, int width, int height) {
-        this(debug, null, width, height);
+        $pointer = N.webview_create_size(debug, width, height);
     }
 
     /**
@@ -93,7 +90,7 @@ public class Webview implements Closeable, Runnable {
      * The default size will be set, and if the size is set again before loading the
      * URL, a splash will appear.<br/>
      * eg:
-     * 
+     *
      * <pre>
      * <code>
      *   WebView wv = new WebView(true);
@@ -101,22 +98,20 @@ public class Webview implements Closeable, Runnable {
      *   wv.loadURL("...")
      * </code>
      * </pre>
-     * 
+     * <p>
      * It's recommended that setting size together:
-     * 
+     *
      * <pre>
      * <code>
      *   WebView wv = new WebView(true, 1280, 720);
      *   wv.loadURL("...")
      * </code>
      * </pre>
-     * 
+     *
      * @param debug  Enables devtools/inspect element if true.
-     * 
      * @param target The target awt component, such as a {@link java.awt.JFrame} or
      *               {@link java.awt.Canvas}. Must be "drawable".
-     * 
-     * @see          #Webview(boolean, PointerByReference, int, int)
+     * @see #Webview(boolean, PointerByReference, int, int)
      */
     public Webview(boolean debug, @NonNull Component target) {
         this(debug, new PointerByReference(Native.getComponentPointer(target)));
@@ -127,18 +122,7 @@ public class Webview implements Closeable, Runnable {
      */
     @Deprecated
     public Webview(boolean debug, @Nullable PointerByReference windowPointer) {
-        this(debug, windowPointer, 800, 600);
-    }
-
-    /**
-     * @deprecated Use this only if you absolutely know what you're doing.
-     */
-    @Deprecated
-    public Webview(boolean debug, @Nullable PointerByReference windowPointer, int width, int height) {
         $pointer = N.webview_create(debug, windowPointer);
-
-        this.loadURL(null);
-        this.setSize(width, height);
     }
 
     /**
@@ -185,12 +169,10 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Sets the script to be run on page load. Defaults to no nested access (false).
-     * 
-     * @implNote        This get's called AFTER window.load.
-     * 
-     * @param    script
-     * 
-     * @see             #setInitScript(String, boolean)
+     *
+     * @param script
+     * @implNote This get's called AFTER window.load.
+     * @see #setInitScript(String, boolean)
      */
     public void setInitScript(@NonNull String script) {
         this.setInitScript(script, false);
@@ -198,27 +180,26 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Sets the script to be run on page load.
-     * 
-     * @implNote                   This get's called AFTER window.load.
-     * 
-     * @param    script
-     * @param    allowNestedAccess whether or not to inject the script into nested
-     *                             iframes.
+     *
+     * @param script
+     * @param allowNestedAccess whether or not to inject the script into nested
+     *                          iframes.
+     * @implNote This get's called AFTER window.load.
      */
     public void setInitScript(@NonNull String script, boolean allowNestedAccess) {
         script = String.format(
-            "(() => {\n"
-                + "try {\n"
-                + "if (window.top == window.self || %b) {\n"
-                + "%s\n"
-                + "}\n"
-                + "} catch (e) {\n"
-                + "console.error('[Webview]', 'An error occurred whilst evaluating init script:', %s, e);\n"
-                + "}\n"
-                + "})();",
-            allowNestedAccess,
-            script,
-            '"' + _WebviewUtil.jsonEscape(script) + '"'
+                "(() => {\n"
+                        + "try {\n"
+                        + "if (window.top == window.self || %b) {\n"
+                        + "%s\n"
+                        + "}\n"
+                        + "} catch (e) {\n"
+                        + "console.error('[Webview]', 'An error occurred whilst evaluating init script:', %s, e);\n"
+                        + "}\n"
+                        + "})();",
+                allowNestedAccess,
+                script,
+                '"' + _WebviewUtil.jsonEscape(script) + '"'
         );
 
         N.webview_init($pointer, script);
@@ -226,42 +207,40 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Executes the given script NOW.
-     * 
+     *
      * @param script
      */
     public void eval(@NonNull String script) {
         this.dispatch(() -> {
             N.webview_eval(
-                $pointer,
-                String.format(
-                    "try {\n"
-                        + "%s\n"
-                        + "} catch (e) {\n"
-                        + "console.error('[Webview]', 'An error occurred whilst evaluating script:', %s, e);\n"
-                        + "}",
-                    script,
-                    '"' + _WebviewUtil.jsonEscape(script) + '"'
-                )
+                    $pointer,
+                    String.format(
+                            "try {\n"
+                                    + "%s\n"
+                                    + "} catch (e) {\n"
+                                    + "console.error('[Webview]', 'An error occurred whilst evaluating script:', %s, e);\n"
+                                    + "}",
+                            script,
+                            '"' + _WebviewUtil.jsonEscape(script) + '"'
+                    )
             );
         });
     }
 
     /**
      * Binds a function to the JavaScript environment on page load.
-     * 
-     * @implNote         This get's called AFTER window.load.
-     * 
-     * @implSpec         After calling the function in JavaScript you will get a
-     *                   Promise instead of the value. This is to prevent you from
-     *                   locking up the browser while waiting on your Java code to
-     *                   execute and generate a return value.
-     * 
-     * @param    name    The name to be used for the function, e.g "foo" to get
-     *                   foo().
-     * @param    handler The callback handler, accepts a JsonArray (which are all
-     *                   arguments passed to the function()) and returns a value
-     *                   which is of type JsonElement (can be null). Exceptions are
-     *                   automatically passed back to JavaScript.
+     *
+     * @param name    The name to be used for the function, e.g "foo" to get
+     *                foo().
+     * @param handler The callback handler, accepts a JsonArray (which are all
+     *                arguments passed to the function()) and returns a value
+     *                which is of type JsonElement (can be null). Exceptions are
+     *                automatically passed back to JavaScript.
+     * @implNote This get's called AFTER window.load.
+     * @implSpec After calling the function in JavaScript you will get a
+     * Promise instead of the value. This is to prevent you from
+     * locking up the browser while waiting on your Java code to
+     * execute and generate a return value.
      */
     public void bind(@NonNull String name, @NonNull WebviewBindCallback handler) {
         N.webview_bind($pointer, name, new BindCallback() {
@@ -289,7 +268,7 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Unbinds a function, removing it from future pages.
-     * 
+     *
      * @param name The name of the function.
      */
     public void unbind(@NonNull String name) {
@@ -298,7 +277,7 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Executes an event on the event thread.
-     * 
+     *
      * @deprecated Use this only if you absolutely know what you're doing.
      */
     @Deprecated
@@ -310,7 +289,7 @@ public class Webview implements Closeable, Runnable {
 
     /**
      * Executes the webview event loop until the user presses "X" on the window.
-     * 
+     *
      * @see #close()
      */
     @Override
@@ -322,7 +301,7 @@ public class Webview implements Closeable, Runnable {
     /**
      * Executes the webview event loop asynchronously until the user presses "X" on
      * the window.
-     * 
+     *
      * @see #close()
      */
     public void runAsync() {

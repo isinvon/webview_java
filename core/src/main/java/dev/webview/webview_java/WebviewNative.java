@@ -2,17 +2,17 @@
  * MIT LICENSE
  *
  * Copyright (c) 2024 Alex Bowles @ Casterlabs
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,10 +43,10 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 
 interface WebviewNative extends Library {
-    static final WebviewNative N = runSetup();
+    WebviewNative N = runSetup();
 
     @SneakyThrows
-    private static WebviewNative runSetup() {
+    static WebviewNative runSetup() {
         String[] libraries = null;
 
         switch (Platform.osDistribution) {
@@ -72,7 +72,7 @@ interface WebviewNative extends Library {
 
             case WINDOWS_NT: {
                 libraries = new String[] {
-//                        "/dev/webview/webview_java/natives/" + Platform.archTarget + "/windows_nt/WebView2Loader.dll",
+                       "/dev/webview/webview_java/natives/" + Platform.archTarget + "/windows_nt/webview2loader.dll",
                         "/dev/webview/webview_java/natives/" + Platform.archTarget + "/windows_nt/webview.dll"
                 };
                 break;
@@ -152,18 +152,20 @@ interface WebviewNative extends Library {
      * the native window handle. If it's non-null - then child WebView is embedded
      * into the given parent window. Otherwise a new window is created. Depending on
      * the platform, a GtkWindow, NSWindow or HWND pointer can be passed here.
-     * 
+     *
      * @param debug   Enables developer tools if true (if supported)
      * @param $window A pointer to a native window handle, for embedding the webview
      *                in a window. (Either a GtkWindow, NSWindow, or HWND pointer)
      */
     long webview_create(boolean debug, PointerByReference window);
 
+    long webview_create_size(boolean debug, int width, int height);
+
     /**
      * @return            a native window handle pointer.
-     * 
+     *
      * @param    $pointer The instance pointer of the webview
-     * 
+     *
      * @implNote          This is either a pointer to a GtkWindow, NSWindow, or
      *                    HWND.
      */
@@ -179,7 +181,7 @@ interface WebviewNative extends Library {
 
     /**
      * Navigates to the given URL.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param url      The target url, can be a data uri.
      */
@@ -187,7 +189,7 @@ interface WebviewNative extends Library {
 
     /**
      * Sets the title of the webview window.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param title
      */
@@ -196,7 +198,7 @@ interface WebviewNative extends Library {
     /**
      * Updates the webview's window size, see {@link WV_HINT_NONE},
      * {@link WV_HINT_MIN}, {@link WV_HINT_MAX}, and {@link WV_HINT_FIXED}
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param width
      * @param height
@@ -207,28 +209,28 @@ interface WebviewNative extends Library {
     /**
      * Runs the main loop until it's terminated. You must destroy the webview after
      * this method returns.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      */
     void webview_run(long $pointer);
 
     /**
      * Destroys a webview and closes the native window.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      */
     void webview_destroy(long $pointer);
 
     /**
      * Stops the webview loop, which causes {@link #webview_run(long)} to return.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      */
     void webview_terminate(long $pointer);
 
     /**
      * Evaluates arbitrary JavaScript code asynchronously.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param js       The script to execute
      */
@@ -236,9 +238,9 @@ interface WebviewNative extends Library {
 
     /**
      * Injects JavaScript code at the initialization of the new page.
-     * 
+     *
      * @implSpec          It is guaranteed to be called before window.onload.
-     * 
+     *
      * @param    $pointer The instance pointer of the webview
      * @param    js       The script to execute
      */
@@ -247,7 +249,7 @@ interface WebviewNative extends Library {
     /**
      * Binds a native callback so that it will appear under the given name as a
      * global JavaScript function. Internally it uses webview_init().
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param name     The name of the function to be exposed in Javascript
      * @param callback The callback to be called
@@ -257,7 +259,7 @@ interface WebviewNative extends Library {
 
     /**
      * Remove the native callback specified.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param name     The name of the callback
      */
@@ -266,7 +268,7 @@ interface WebviewNative extends Library {
     /**
      * Allows to return a value from the native binding. Original request pointer
      * must be provided to help internal RPC engine match requests with responses.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param name     The name of the callback
      * @param isError  Whether or not `result` should be thrown as an exception
@@ -277,7 +279,7 @@ interface WebviewNative extends Library {
     /**
      * Dispatches the callback on the UI thread, only effective while
      * {@link #webview_run(long)} is blocking.
-     * 
+     *
      * @param $pointer The instance pointer of the webview
      * @param callback The callback to be called
      * @param arg      Unused
