@@ -5,9 +5,9 @@
 	<artifactId>core</artifactId>
 
 	<parent>
-		<groupId>dev.webview.webview_java</groupId>
+		<groupId>com.github.isinvon.webview_java</groupId>
 		<artifactId>webview_java</artifactId>
-		<version>PLACEHOLDER</version>
+		<version>1.0.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -15,6 +15,11 @@
 		<repository>
 			<id>casterlabs-maven</id>
 			<url>https://repo.casterlabs.co/maven</url>
+		</repository>
+		<repository>
+			<id>github</id>
+			<name>webview_java</name>
+			<url>https://maven.pkg.github.com/isinvon/webview_java</url>
 		</repository>
 	</repositories>
 
